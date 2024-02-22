@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="../CSS/styles.css" />
+		<link rel="stylesheet" href="../CSS/charts.min.css" />
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+			rel="stylesheet"
+		/>
+		<title>Météo</title>
+		<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+	</head>
+	<body>
+		<div class="indexMain">
+			<div class="indexIntro">
+				<h1>Quelle température et humidité aujourd’hui ?</h1>
+				<p>
+					Sélectionnez une des options si dessous pour afficher une sonde ou en
+					créer une nouvelle.
+				</p>
+				<p>Les données sont actualisées toutes les heures.</p>
+			</div>
+
+			<!-- température -->
+
+			<div class="indexTemp">
+				<div>
+					<form action="../templates/choixDonnees.html" method="post">
+						<button type="submit" name="temp">Sonde existante.</button>
+					</form>
+					<!-- Utilisez une liste à la place d'une li pour contenir les sondes -->
+					<ul id="sondesList"></ul>
+					<img
+						src="../images/sonde-de-temperature-ambiante.svg"
+						alt="Icone température"
+					/>
+				</div>
+			</div>
+
+			<!-- humidité -->
+
+			<div class="indexHumid">
+				<div>
+					<button onclick="openModal()">Ajouter une nouvelle sonde</button>
+					<img src="../images/plus.svg" alt="Icone humidité" />
+				</div>
+			</div>
+
+			<!-- La modal -->
+			<div id="myModal" class="modal">
+				<div class="modal-content">
+					<h2>Nouvelle sonde.</h2>
+					<p>Voici les données de votre nouvelle sonde !</p>
+					<!-- Formulaire pour afficher l'humidité -->
+					<form id="myForm">
+						<label for="nom">Nom de la nouvelle sonde:</label>
+						<input type="text" id="fname" name="nom" /><br />
+						<div class="valideAnnul">
+							<button type="button" onclick="submitForm()">Créer</button>
+							<span class="close" onclick="closeModal()">Annuler</span>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<script>
+				function openModal() {
+					document.getElementById("myModal").style.display = "block";
+				}
+			
+				function closeModal() {
+					document.getElementById("myModal").style.display = "none";
+				}
+			
+				function getAllSondes() {
+					$.ajax({
+						url: "http://api.localhost:9530/apirest.php?resource=sondes",
+						method: "GET",
+						dataType: "json",
+						success: function (data) {
+							if (data && data.length > 0) {
+								var sondesList = $("#sondesList");
+								sondesList.empty(); //empty() pour vider la liste
+			
+								for (var i = 0; i < data.length; i++) {
+									var sonde = data[i];
+									// append() pour ajouter des éléments à la liste
+									sondesList.append('<li class="sonde-item" data-sonde-id="' + sonde.ID + '">' + sonde.nom + '</li>');
+								}
+							} else {
+								console.log("Aucune sonde trouvée.");
+							}
+
+							$(document).on('click', '.sonde-item', function () {
+								var sondeId = $(this).data('sonde-id');
+								window.location.href = '../templates/choixDonnees.html?idSonde=' + sondeId;
+							});
+						},
+						error: function (error) {
+							console.error("Erreur lors de la récupération des sondes:", error);
+						},
+					});
+				}
+
+				function submitForm() {
+					var form = document.getElementById('myForm');
+					var formData = new FormData(form);
+					var jsonData = {};
+
+					formData.forEach(function(value, key){
+						jsonData[key] = value;
+					});
+
+					fetch('http://localhost:9530/apirest.php?sonde', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(jsonData),
+					})
+					.then(response => {
+						if (!response.ok) {
+							throw new Error('Erreur de la réponse');
+						}
+						return response.json();
+					})
+					.then(data => {
+						console.log(data);
+						window.location.reload();
+					})
+					.catch(error => {
+						console.error('Il y a un problème avec l opération fetch', error);
+					});
+				}
+			
+				$(document).ready(function () {
+					getAllSondes(); 
+				});
+			</script>
+			
+		</div>
+		<footer>
+			<p>&copy; 2023 Météo App</p>
+		</footer>
+	</body>
+</html>

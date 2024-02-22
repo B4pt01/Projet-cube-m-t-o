@@ -1,0 +1,31 @@
+#------------------------------------------------------------
+#        Script MySQL.
+#------------------------------------------------------------
+
+
+#------------------------------------------------------------
+# Table: Sonde
+#------------------------------------------------------------
+
+CREATE TABLE Sonde(
+        ID  Int  Auto_increment  NOT NULL ,
+        nom Varchar (50) NOT NULL
+	,CONSTRAINT Sonde_PK PRIMARY KEY (ID)
+)ENGINE=InnoDB;
+
+
+#------------------------------------------------------------
+# Table: Releves
+#------------------------------------------------------------
+
+CREATE TABLE Releves(
+        ID          Int  Auto_increment  NOT NULL ,
+        Date        Datetime NOT NULL ,
+        Temperature Float NOT NULL ,
+        Humidite    Float NOT NULL ,
+        ID_Sonde    Int NOT NULL
+	,CONSTRAINT Releves_PK PRIMARY KEY (ID)
+
+	,CONSTRAINT Releves_Sonde_FK FOREIGN KEY (ID_Sonde) REFERENCES Sonde(ID)
+)ENGINE=InnoDB;
+
